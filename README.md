@@ -3,7 +3,7 @@ This repo is consists of implementation of Repository pattern and unit of work i
 
 # Project Dependencies
 
-<img width="637" height="178" alt="image" src="https://github.com/user-attachments/assets/22c31375-145c-4b75-9648-59704ec7d1c2" />
+<img width="646" height="179" alt="AdobeExpressPhotos_495c4490e0cf4263944bc212b0abe54e_CopyEdited" src="https://github.com/user-attachments/assets/bb4f7be0-0340-4423-9f52-f5e2c6e53bb0" />
 
 <br />
 
