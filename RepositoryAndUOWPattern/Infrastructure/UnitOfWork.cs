@@ -1,0 +1,95 @@
+﻿using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
+
+namespace Infrastructure
+{
+    internal class UnitOfWork : IUnitOfWork
+    {
+        private readonly DbContext _context;
+        private bool _disposed;
+
+        public UnitOfWork(EFContext context)
+        {
+            this._context = context;
+        }
+
+
+        public async Task<int> CommitTransactionAsync(ITransaction transaction)
+        {
+            var result = await this._context.SaveChangesAsync();
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<ITransaction> BeginTransactionAsync()
+        {
+            IDbContextTransaction _transaction = await this._context.Database.BeginTransactionAsync();
+            return new EFTransaction(_transaction);
+        }
+
+        public async Task RollbackTransactionAsync(ITransaction transaction)
+        {
+            RevertEntitiesChanges();
+
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+        }
+
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this._disposed)
+            {
+                if (disposing)
+                {
+                    this._context.Dispose();
+                }
+            }
+
+            this._disposed = true;
+        }
+
+        private void RevertEntitiesChanges()
+        {
+            var chanaged = this._context.ChangeTracker.Entries().Where(x => x.State != EntityState.Unchanged).ToList();
+
+            foreach (var item in chanaged)
+            {
+                switch (item.State)
+                {
+                    case EntityState.Detached:
+                        break;
+                    case EntityState.Unchanged:
+                        break;
+                    case EntityState.Deleted:
+                        item.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Modified:
+                        item.CurrentValues.SetValues(item.OriginalValues);
+                        item.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Added:
+                        item.State = EntityState.Detached;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
